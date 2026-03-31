@@ -70,6 +70,7 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
 
 .tabs {
   display: flex;
+  justify-content: center;
   gap: 8px;
   padding: 16px 16px 0;
   overflow-x: auto;
@@ -333,6 +334,25 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
 .modal-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .modal-description { font-size: 15px; line-height: 1.7; color: #374151; margin-bottom: 18px; }
 
+.rating-toggle {
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid #e9d5ff;
+  cursor: pointer;
+  background: #fff;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.rating-toggle.active {
+  background: #1e1b4b;
+  color: #fff;
+  border-color: transparent;
+}
+.rating-toggle:not(.active):hover { border-color: #a78bfa; color: var(--purple-dark); }
+
 .modal-meta {
   background: #f9f5ff;
   border-radius: 14px;
@@ -379,6 +399,13 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
     <button class="tab active" data-tab="all">All Movies</button>
     <button class="tab" data-tab="theaters">In Theaters</button>
     <button class="tab" data-tab="streaming">Streaming</button>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px; padding: 10px 2px 0;">
+    <span style="font-family:'Nunito',sans-serif; font-weight:700; font-size:12px; color:var(--text-muted);">Max rating:</span>
+    <div style="display:flex; gap:6px;">
+      <button class="rating-toggle active" data-max="PG">G &amp; PG</button>
+      <button class="rating-toggle" data-max="PG-13">+ PG-13</button>
+    </div>
   </div>
 </div>
 
@@ -427,6 +454,7 @@ const PROVIDER_IDS = new Set(Object.keys(PROVIDERS).map(Number));
 
 let allMovies = [];
 let activeTab = 'all';
+let maxRating = 'PG'; // 'PG' = G and PG only, 'PG-13' = all family ratings
 
 // ── TMDB helpers ──
 async function tmdb(path, params = {}) {
@@ -596,8 +624,19 @@ function esc(s) {
 
 function renderMovies() {
   const content = document.getElementById('content');
-  const theater  = allMovies.filter(m => m.where === 'theater');
-  const streaming = allMovies.filter(m => m.where === 'streaming');
+
+  // Apply rating filter
+  const ratingOrder = ['G', 'PG', 'PG-13'];
+  const maxIdx = ratingOrder.indexOf(maxRating);
+  const allowed = new Set(ratingOrder.slice(0, maxIdx + 1));
+
+  function ratingOk(m) {
+    if (!m.rating) return true; // unrated — include
+    return allowed.has(m.rating);
+  }
+
+  const theater  = allMovies.filter(m => m.where === 'theater'  && ratingOk(m));
+  const streaming = allMovies.filter(m => m.where === 'streaming' && ratingOk(m));
 
   const groups = activeTab === 'all'
     ? [['In Theaters Now', theater], ['New to Streaming', streaming]]
@@ -730,6 +769,13 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target.id === 'modal-overlay') closeModal();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.querySelectorAll('.rating-toggle').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.rating-toggle').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  maxRating = t.dataset.max;
+  renderMovies();
+}));
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
