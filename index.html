@@ -30,7 +30,29 @@ body {
   color: var(--text);
   min-height: 100vh;
   padding: 0 0 80px;
+  overscroll-behavior-y: contain;
 }
+
+/* ── Pull to refresh ── */
+#ptr-indicator {
+  text-align: center;
+  padding: 0;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.2s, padding 0.2s;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg);
+}
+#ptr-indicator.visible { height: 52px; padding: 10px 0; }
+#ptr-indicator.spinning .ptr-arrow { animation: spin 0.7s linear infinite; }
+.ptr-arrow { display: inline-block; font-size: 18px; }
 
 header {
   background: linear-gradient(135deg, #7c3aed 0%, #db2777 60%, #f59e0b 100%);
@@ -98,6 +120,21 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
   box-shadow: 0 3px 12px rgba(124,58,237,0.35);
 }
 .tab:not(.active):hover { border-color: #a78bfa; color: var(--purple-dark); }
+
+.rating-toggle {
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid #e9d5ff;
+  cursor: pointer;
+  background: #fff;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.rating-toggle.active { background: #1e1b4b; color: #fff; border-color: transparent; }
+.rating-toggle:not(.active):hover { border-color: #a78bfa; color: var(--purple-dark); }
 
 .main { padding: 16px; }
 
@@ -182,8 +219,9 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
   height: 4px;
   border-radius: var(--radius) var(--radius) 0 0;
 }
-.movie-card.theater::before  { background: linear-gradient(90deg, #7c3aed, #db2777); }
+.movie-card.theater::before   { background: linear-gradient(90deg, #7c3aed, #db2777); }
 .movie-card.streaming::before { background: linear-gradient(90deg, #0f766e, #2563eb); }
+.movie-card.coming::before    { background: linear-gradient(90deg, #f59e0b, #ef4444); }
 .movie-card:hover  { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .movie-card:active { transform: scale(0.98); }
 
@@ -224,12 +262,13 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
   font-size: 11px;
   white-space: nowrap;
 }
-.badge-g    { background: #dcfce7; color: #166534; }
-.badge-pg   { background: #dbeafe; color: #1e40af; }
-.badge-pg13 { background: var(--yellow-light); color: #92400e; }
-.badge-nr   { background: #f3f4f6; color: #4b5563; }
+.badge-g      { background: #dcfce7; color: #166534; }
+.badge-pg     { background: #dbeafe; color: #1e40af; }
+.badge-pg13   { background: var(--yellow-light); color: #92400e; }
+.badge-nr     { background: #f3f4f6; color: #4b5563; }
 .badge-theater  { background: var(--purple-light); color: var(--purple-dark); }
 .badge-platform { background: var(--teal-light); color: var(--teal-dark); font-size: 10px; }
+.badge-coming   { background: #fff7ed; color: #c2410c; }
 
 .movie-stars { color: #f59e0b; font-size: 12px; }
 
@@ -334,25 +373,6 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
 .modal-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .modal-description { font-size: 15px; line-height: 1.7; color: #374151; margin-bottom: 18px; }
 
-.rating-toggle {
-  padding: 5px 14px;
-  border-radius: 100px;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  border: 2px solid #e9d5ff;
-  cursor: pointer;
-  background: #fff;
-  color: var(--text-muted);
-  transition: all 0.2s;
-}
-.rating-toggle.active {
-  background: #1e1b4b;
-  color: #fff;
-  border-color: transparent;
-}
-.rating-toggle:not(.active):hover { border-color: #a78bfa; color: var(--purple-dark); }
-
 .modal-meta {
   background: #f9f5ff;
   border-radius: 14px;
@@ -365,7 +385,9 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
 .modal-meta-label { color: var(--text-muted); font-weight: 600; }
 .modal-meta-value { color: var(--text); font-weight: 700; text-align: right; max-width: 65%; }
 
-.modal-platforms { display: flex; flex-wrap: wrap; gap: 6px; }
+.modal-footer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.modal-platforms { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
 .platform-pill {
   padding: 6px 14px;
   border-radius: 100px;
@@ -384,9 +406,57 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
   font-weight: 700;
   font-size: 13px;
 }
+.coming-pill {
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Trailer button */
+.trailer-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: #ff0000;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.trailer-btn.visible { display: inline-flex; }
+.trailer-btn:hover { opacity: 0.88; }
+.trailer-btn svg { width: 14px; height: 14px; fill: #fff; flex-shrink: 0; }
+
+/* Video embed */
+.trailer-embed {
+  display: none;
+  margin-top: 16px;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  background: #000;
+}
+.trailer-embed.visible { display: block; }
+.trailer-embed iframe { width: 100%; height: 100%; border: none; display: block; }
 </style>
 </head>
 <body>
+
+<div id="ptr-indicator">
+  <span class="ptr-arrow">↻</span>
+  <span id="ptr-text">Pull to refresh</span>
+</div>
 
 <header>
   <span class="header-emoji">🍿</span>
@@ -399,6 +469,7 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
     <button class="tab active" data-tab="all">All Movies</button>
     <button class="tab" data-tab="theaters">In Theaters</button>
     <button class="tab" data-tab="streaming">Streaming</button>
+    <button class="tab" data-tab="coming">Coming Soon</button>
   </div>
   <div style="display:flex; justify-content:center; align-items:center; gap:10px; padding: 10px 2px 0;">
     <span style="font-family:'Nunito',sans-serif; font-weight:700; font-size:12px; color:var(--text-muted);">Max rating:</span>
@@ -428,11 +499,20 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
       <div class="modal-hero-fade"></div>
     </div>
     <div class="modal-body">
-      <div class="modal-title"  id="modal-title"></div>
-      <div class="modal-badges" id="modal-badges"></div>
-      <p class="modal-description" id="modal-description"></p>
-      <div class="modal-meta"      id="modal-meta" style="display:none;"></div>
-      <div class="modal-platforms" id="modal-platforms"></div>
+      <div class="modal-title"       id="modal-title"></div>
+      <div class="modal-badges"      id="modal-badges"></div>
+      <p class="modal-description"   id="modal-description"></p>
+      <div class="modal-meta"        id="modal-meta" style="display:none;"></div>
+      <div class="modal-footer">
+        <div class="modal-platforms" id="modal-platforms"></div>
+        <a class="trailer-btn" id="trailer-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+          Watch trailer
+        </a>
+      </div>
+      <div class="trailer-embed" id="trailer-embed">
+        <iframe id="trailer-iframe" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
     </div>
   </div>
 </div>
@@ -443,7 +523,7 @@ const BASE    = 'https://api.themoviedb.org/3';
 const IMG     = 'https://image.tmdb.org/t/p/';
 const HEADERS = { Authorization: `Bearer ${TOKEN}` };
 
-const OK_RATINGS = new Set(['G','PG','PG-13']);
+const OK_RATINGS    = new Set(['G','PG','PG-13']);
 const FAMILY_GENRES = new Set([16, 10751, 12, 14, 35, 878]);
 
 const PROVIDERS = {
@@ -452,11 +532,11 @@ const PROVIDERS = {
 };
 const PROVIDER_IDS = new Set(Object.keys(PROVIDERS).map(Number));
 
-let allMovies = [];
-let activeTab = 'all';
-let maxRating = 'PG'; // 'PG' = G and PG only, 'PG-13' = all family ratings
+let allMovies  = [];
+let activeTab  = 'all';
+let maxRating  = 'PG';
 
-// ── TMDB helpers ──
+// ── TMDB ──
 async function tmdb(path, params = {}) {
   const qs = Object.entries(params)
     .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
@@ -495,17 +575,33 @@ async function getDetails(id) {
   } catch { return {}; }
 }
 
+async function getTrailerKey(id) {
+  try {
+    const d = await tmdb(`/movie/${id}/videos`);
+    const trailer = d.results?.find(v =>
+      v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser') && v.official !== false
+    );
+    return trailer?.key || null;
+  } catch { return null; }
+}
+
 function sixMonthsAgo() {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 6);
+  const d = new Date(); d.setMonth(d.getMonth() - 6);
   return d.toISOString().split('T')[0];
+}
+function inThreeMonths() {
+  const d = new Date(); d.setMonth(d.getMonth() + 3);
+  return d.toISOString().split('T')[0];
+}
+function today() {
+  return new Date().toISOString().split('T')[0];
 }
 
 function isFamilyGenre(m) {
   return m.genre_ids?.some(id => FAMILY_GENRES.has(id));
 }
 
-// ── Fetch & process ──
+// ── Fetch ──
 async function fetchMovies() {
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
@@ -514,31 +610,44 @@ async function fetchMovies() {
     '<div class="loading-state"><div class="loader"></div><p>Loading movies...</p></div>';
 
   try {
-    // Theater: now playing, family genres
-    const [np1, np2] = await Promise.all([
+    // Theater + streaming candidates
+    const [np1, np2, s1, s2, up1, up2] = await Promise.all([
       tmdb('/movie/now_playing', { language:'en-US', region:'US', page:1 }),
       tmdb('/movie/now_playing', { language:'en-US', region:'US', page:2 }),
-    ]);
-    const theaterCandidates = [...(np1.results||[]), ...(np2.results||[])]
-      .filter(isFamilyGenre).slice(0, 24);
-
-    // Streaming: family/animation on streaming platforms
-    const [s1, s2] = await Promise.all([
       tmdb('/discover/movie', { language:'en-US', region:'US', with_genres:'16|10751',
         watch_region:'US', with_watch_monetization_types:'flatrate',
         sort_by:'popularity.desc', 'primary_release_date.gte': sixMonthsAgo(), page:1 }),
       tmdb('/discover/movie', { language:'en-US', region:'US', with_genres:'12|14|35',
         watch_region:'US', with_watch_monetization_types:'flatrate',
         sort_by:'popularity.desc', 'primary_release_date.gte': sixMonthsAgo(), page:1 }),
+      // Coming soon: family genres releasing from today through ~3 months out
+      tmdb('/discover/movie', { language:'en-US', region:'US', with_genres:'16|10751|12',
+        sort_by:'primary_release_date.asc',
+        'primary_release_date.gte': today(),
+        'primary_release_date.lte': inThreeMonths(), page:1 }),
+      tmdb('/discover/movie', { language:'en-US', region:'US', with_genres:'14|35',
+        sort_by:'primary_release_date.asc',
+        'primary_release_date.gte': today(),
+        'primary_release_date.lte': inThreeMonths(), page:1 }),
     ]);
+
+    const theaterCandidates = [...(np1.results||[]), ...(np2.results||[])]
+      .filter(isFamilyGenre).slice(0, 24);
+
     const streamingMap = new Map();
     [...(s1.results||[]), ...(s2.results||[])].forEach(m => streamingMap.set(m.id, m));
     const streamingCandidates = [...streamingMap.values()].slice(0, 32);
 
-    // Fetch certifications in parallel
-    const [tCerts, sCerts] = await Promise.all([
+    const comingMap = new Map();
+    [...(up1.results||[]), ...(up2.results||[])].forEach(m => comingMap.set(m.id, m));
+    const comingCandidates = [...comingMap.values()]
+      .filter(isFamilyGenre).slice(0, 24);
+
+    // Certifications in parallel
+    const [tCerts, sCerts, cCerts] = await Promise.all([
       Promise.all(theaterCandidates.map(m => getCert(m.id))),
       Promise.all(streamingCandidates.map(m => getCert(m.id))),
+      Promise.all(comingCandidates.map(m => getCert(m.id))),
     ]);
 
     const theaterMovies = theaterCandidates
@@ -560,28 +669,32 @@ async function fetchMovies() {
       .map((m,i) => ({ ...m, providers: providerLists[i] }))
       .filter(m => m.providers.length > 0);
 
+    const comingMovies = comingCandidates
+      .map((m,i) => ({ ...m, cert: cCerts[i] }))
+      .filter(m => !m.cert || OK_RATINGS.has(m.cert))
+      .filter(m => !theaterIds.has(m.id));
+
+    function mapMovie(m, where, platforms) {
+      return {
+        id: m.id, title: m.title, where,
+        rating: m.cert, overview: m.overview,
+        poster: m.poster_path, backdrop: m.backdrop_path,
+        vote: m.vote_average, releaseDate: m.release_date,
+        genre_ids: m.genre_ids, platforms,
+      };
+    }
+
     allMovies = [
-      ...theaterMovies.map(m => ({
-        id: m.id, title: m.title, where: 'theater',
-        rating: m.cert, overview: m.overview,
-        poster: m.poster_path, backdrop: m.backdrop_path,
-        vote: m.vote_average, releaseDate: m.release_date,
-        genre_ids: m.genre_ids, platforms: [],
-      })),
-      ...streamingMovies.map(m => ({
-        id: m.id, title: m.title, where: 'streaming',
-        rating: m.cert, overview: m.overview,
-        poster: m.poster_path, backdrop: m.backdrop_path,
-        vote: m.vote_average, releaseDate: m.release_date,
-        genre_ids: m.genre_ids, platforms: m.providers,
-      })),
+      ...theaterMovies.map(m => mapMovie(m, 'theater', [])),
+      ...streamingMovies.map(m => mapMovie(m, 'streaming', m.providers)),
+      ...comingMovies.map(m => mapMovie(m, 'coming', [])),
     ];
 
     renderMovies();
 
     const lu = document.getElementById('last-updated');
     lu.style.display = 'block';
-    lu.textContent = `Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} — ${theaterMovies.length} in theaters, ${streamingMovies.length} on streaming`;
+    lu.textContent = `Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} — ${theaterMovies.length} in theaters, ${streamingMovies.length} streaming, ${comingMovies.length} coming soon`;
 
   } catch(err) {
     document.getElementById('content').innerHTML = `
@@ -594,7 +707,7 @@ async function fetchMovies() {
   btn.classList.remove('loading');
 }
 
-// ── Render ──
+// ── Render helpers ──
 function ratingClass(r) {
   if (!r) return 'badge-nr';
   if (r === 'G') return 'badge-g';
@@ -622,27 +735,34 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function formatDate(dateStr) {
+  if (!dateStr) return null;
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
+
+// ── Render ──
 function renderMovies() {
   const content = document.getElementById('content');
 
-  // Apply rating filter
-  const ratingOrder = ['G', 'PG', 'PG-13'];
-  const maxIdx = ratingOrder.indexOf(maxRating);
+  const ratingOrder = ['G','PG','PG-13'];
+  const maxIdx  = ratingOrder.indexOf(maxRating);
   const allowed = new Set(ratingOrder.slice(0, maxIdx + 1));
-
-  function ratingOk(m) {
-    if (!m.rating) return true; // unrated — include
-    return allowed.has(m.rating);
-  }
+  const ratingOk = m => !m.rating || allowed.has(m.rating);
 
   const theater  = allMovies.filter(m => m.where === 'theater'  && ratingOk(m));
   const streaming = allMovies.filter(m => m.where === 'streaming' && ratingOk(m));
+  const coming    = allMovies.filter(m => m.where === 'coming'    && ratingOk(m));
 
-  const groups = activeTab === 'all'
-    ? [['In Theaters Now', theater], ['New to Streaming', streaming]]
-    : activeTab === 'theaters'
-      ? [['In Theaters Now', theater]]
-      : [['New to Streaming', streaming]];
+  let groups;
+  if (activeTab === 'all') {
+    groups = [['In Theaters Now', theater, 'theater'], ['New to Streaming', streaming, 'streaming']];
+  } else if (activeTab === 'theaters') {
+    groups = [['In Theaters Now', theater, 'theater']];
+  } else if (activeTab === 'streaming') {
+    groups = [['New to Streaming', streaming, 'streaming']];
+  } else {
+    groups = [['Coming Soon', coming, 'coming']];
+  }
 
   let html = '';
   for (const [label, movies] of groups) {
@@ -653,10 +773,15 @@ function renderMovies() {
       const imgHtml = thumb
         ? `<img src="${thumb}" alt="${esc(m.title)}" loading="lazy">`
         : `<span>${emoji(m)}</span>`;
-      const platBadges = m.platforms.map(p => `<span class="badge badge-platform">${p}</span>`).join('');
-      const whereBadge = m.where === 'theater'
-        ? `<span class="badge badge-theater">🎬 In theaters</span>`
-        : platBadges;
+      let whereBadge = '';
+      if (m.where === 'theater') {
+        whereBadge = `<span class="badge badge-theater">🎬 In theaters</span>`;
+      } else if (m.where === 'streaming') {
+        whereBadge = m.platforms.map(p => `<span class="badge badge-platform">${p}</span>`).join('');
+      } else {
+        const rd = formatDate(m.releaseDate);
+        whereBadge = `<span class="badge badge-coming">🗓 ${rd || 'Coming soon'}</span>`;
+      }
       html += `
         <div class="movie-card ${m.where}" data-id="${m.id}">
           <div class="card-top">
@@ -690,33 +815,38 @@ function renderMovies() {
 
 // ── Modal ──
 async function openModal(movie) {
-  const overlay = document.getElementById('modal-overlay');
-  const hero    = document.getElementById('modal-hero');
-  const emojiEl = document.getElementById('modal-emoji');
+  const overlay  = document.getElementById('modal-overlay');
+  const hero     = document.getElementById('modal-hero');
+  const emojiEl  = document.getElementById('modal-emoji');
+  const trailerBtn   = document.getElementById('trailer-btn');
+  const trailerEmbed = document.getElementById('trailer-embed');
+  const trailerFrame = document.getElementById('trailer-iframe');
 
   document.getElementById('modal-title').textContent       = movie.title;
   document.getElementById('modal-description').textContent = movie.overview || '';
 
-  // Reset hero
+  // Reset hero image
   hero.querySelectorAll('img').forEach(i => i.remove());
   emojiEl.textContent  = emoji(movie);
   emojiEl.style.display = '';
 
-  // Load poster (prefer backdrop for hero, fallback to poster)
   const src = movie.backdrop
     ? `${IMG}w780${movie.backdrop}`
     : movie.poster ? `${IMG}w500${movie.poster}` : null;
-
   if (src) {
     const img = new Image();
     img.alt = movie.title;
     img.onload = () => {
       emojiEl.style.display = 'none';
-      const fade = hero.querySelector('.modal-hero-fade');
-      hero.insertBefore(img, fade);
+      hero.insertBefore(img, hero.querySelector('.modal-hero-fade'));
     };
     img.src = src;
   }
+
+  // Reset trailer
+  trailerBtn.classList.remove('visible');
+  trailerEmbed.classList.remove('visible');
+  trailerFrame.src = '';
 
   // Badges
   document.getElementById('modal-badges').innerHTML = `
@@ -724,24 +854,25 @@ async function openModal(movie) {
     ${movie.vote ? `<span class="badge" style="background:#fef3c7;color:#92400e;">★ ${movie.vote.toFixed(1)}</span>` : ''}
   `;
 
-  // Platforms
+  // Platforms / where pill
   const platEl = document.getElementById('modal-platforms');
   if (movie.where === 'theater') {
     platEl.innerHTML = '<span class="theater-pill">🎬 Now in theaters</span>';
+  } else if (movie.where === 'coming') {
+    const rd = formatDate(movie.releaseDate);
+    platEl.innerHTML = `<span class="coming-pill">🗓 ${rd || 'Coming soon'}</span>`;
   } else {
     platEl.innerHTML = (movie.platforms||[]).map(p => `<span class="platform-pill">${p}</span>`).join('');
   }
 
-  // Meta: show release date immediately, fill rest after detail fetch
+  // Meta
   function buildMeta(extra = {}) {
-    const releaseFormatted = movie.releaseDate
-      ? new Date(movie.releaseDate + 'T12:00:00').toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' })
-      : null;
     const rows = [];
-    if (extra.genres)        rows.push(['Genre',    extra.genres]);
-    if (extra.runtime)       rows.push(['Runtime',  extra.runtime]);
-    if (releaseFormatted)    rows.push(['Released', releaseFormatted]);
-    if (extra.director)      rows.push(['Director', extra.director]);
+    if (extra.genres)           rows.push(['Genre',    extra.genres]);
+    if (extra.runtime)          rows.push(['Runtime',  extra.runtime]);
+    const rd = formatDate(movie.releaseDate);
+    if (rd)                     rows.push(['Released', rd]);
+    if (extra.director)         rows.push(['Director', extra.director]);
     const metaEl = document.getElementById('modal-meta');
     if (!rows.length) { metaEl.style.display = 'none'; return; }
     metaEl.style.display = 'grid';
@@ -756,19 +887,48 @@ async function openModal(movie) {
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Fetch and fill details async
-  getDetails(movie.id).then(extra => buildMeta(extra)).catch(() => {});
+  // Fetch details and trailer key in parallel
+  const [extra, trailerKey] = await Promise.all([
+    getDetails(movie.id).catch(() => ({})),
+    getTrailerKey(movie.id).catch(() => null),
+  ]);
+
+  buildMeta(extra);
+
+  if (trailerKey) {
+    trailerBtn.classList.add('visible');
+    trailerBtn.onclick = (e) => {
+      e.preventDefault();
+      trailerEmbed.classList.toggle('visible');
+      if (trailerEmbed.classList.contains('visible')) {
+        trailerFrame.src = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
+      } else {
+        trailerFrame.src = '';
+      }
+    };
+  }
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
+  // Stop trailer playback
+  document.getElementById('trailer-iframe').src = '';
+  document.getElementById('trailer-embed').classList.remove('visible');
 }
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target.id === 'modal-overlay') closeModal();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Tabs & filters ──
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  activeTab = t.dataset.tab;
+  renderMovies();
+}));
 
 document.querySelectorAll('.rating-toggle').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.rating-toggle').forEach(x => x.classList.remove('active'));
@@ -777,13 +937,54 @@ document.querySelectorAll('.rating-toggle').forEach(t => t.addEventListener('cli
   renderMovies();
 }));
 
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  t.classList.add('active');
-  activeTab = t.dataset.tab;
-  renderMovies();
-}));
 document.getElementById('refresh-btn').addEventListener('click', fetchMovies);
+
+// ── Pull to refresh ──
+(function() {
+  let startY = 0;
+  let pulling = false;
+  const THRESHOLD = 72;
+  const ptr = document.getElementById('ptr-indicator');
+  const ptrText = document.getElementById('ptr-text');
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dist = e.touches[0].clientY - startY;
+    if (dist > 10) {
+      const clamped = Math.min(dist, THRESHOLD + 20);
+      const h = Math.min(clamped * 0.6, 52);
+      ptr.style.height = h + 'px';
+      ptr.style.padding = (h > 10 ? '10px 0' : '0');
+      ptrText.textContent = dist >= THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
+      ptr.querySelector('.ptr-arrow').style.transform = `rotate(${Math.min(dist * 2, 180)}deg)`;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!pulling) return;
+    pulling = false;
+    const dist = e.changedTouches[0].clientY - startY;
+    if (dist >= THRESHOLD) {
+      ptr.classList.add('visible', 'spinning');
+      ptrText.textContent = 'Refreshing...';
+      fetchMovies().then(() => {
+        ptr.classList.remove('visible', 'spinning');
+        ptr.style.height = '';
+        ptr.style.padding = '';
+      });
+    } else {
+      ptr.style.height = '';
+      ptr.style.padding = '';
+    }
+  }, { passive: true });
+})();
 
 fetchMovies();
 </script>
