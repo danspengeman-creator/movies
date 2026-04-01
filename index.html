@@ -881,7 +881,7 @@ async function openModal(movie) {
 
   // Tickets button — theater movies only
   if (movie.where === 'theater') {
-    const query = encodeURIComponent(movie.title + ' Eatontown NJ');
+    const query = encodeURIComponent(movie.title);
     ticketsBtn.href = `https://www.fandango.com/search?q=${query}`;
     ticketsBtn.classList.add('visible');
   }
