@@ -879,10 +879,10 @@ async function openModal(movie) {
   trailerEmbed.classList.remove('visible');
   trailerFrame.src = '';
 
-  // Tickets button — theater movies only, links to AMC Eatontown showtimes
+  // Tickets button — theater movies only
   if (movie.where === 'theater') {
-    const query = encodeURIComponent(movie.title);
-    ticketsBtn.href = `https://www.amctheatres.com/movies/search?q=${query}&location=Eatontown%2C+NJ`;
+    const query = encodeURIComponent(movie.title + ' Eatontown NJ');
+    ticketsBtn.href = `https://www.fandango.com/search?q=${query}`;
     ticketsBtn.classList.add('visible');
   }
 
