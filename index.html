@@ -359,13 +359,20 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
 }
 
 .modal-body { padding: 20px 22px 36px; }
+.modal-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
 .modal-title {
   font-family: 'Nunito', sans-serif;
   font-weight: 900;
   font-size: 22px;
   line-height: 1.2;
   color: var(--text);
-  margin-bottom: 10px;
+  flex: 1;
 }
 .modal-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .modal-description { font-size: 15px; line-height: 1.7; color: #374151; margin-bottom: 18px; }
@@ -538,15 +545,15 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
       <div class="modal-hero-fade"></div>
     </div>
     <div class="modal-body">
-      <div class="modal-title"       id="modal-title"></div>
+      <div class="modal-title-row">
+        <div class="modal-title" id="modal-title"></div>
+        <a class="tickets-btn" id="tickets-btn" target="_blank" rel="noopener">🎟 Get tickets</a>
+      </div>
       <div class="modal-badges"      id="modal-badges"></div>
       <p class="modal-description"   id="modal-description"></p>
       <div class="modal-meta"        id="modal-meta" style="display:none;"></div>
       <div class="modal-footer">
         <div class="modal-platforms" id="modal-platforms"></div>
-        <a class="tickets-btn" id="tickets-btn" target="_blank" rel="noopener">
-          🎟 Get tickets
-        </a>
         <a class="email-btn" id="email-btn">
           📧 Email me this
         </a>
