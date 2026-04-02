@@ -562,7 +562,7 @@ header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; posi
           Watch trailer
         </a>
       </div>
-      <div class="trailer-embed" id="trailer-embed">
+      <div class="trailer-embed" id="trailer-embed" style="display:none;">
         <iframe id="trailer-iframe" allowfullscreen allow="autoplay; encrypted-media"></iframe>
       </div>
     </div>
@@ -881,8 +881,6 @@ async function openModal(movie) {
   const trailerBtn   = document.getElementById('trailer-btn');
   const ticketsBtn   = document.getElementById('tickets-btn');
   const emailBtn     = document.getElementById('email-btn');
-  const trailerEmbed = document.getElementById('trailer-embed');
-  const trailerFrame = document.getElementById('trailer-iframe');
 
   document.getElementById('modal-title').textContent       = movie.title;
   document.getElementById('modal-description').textContent = movie.overview || '';
@@ -905,12 +903,10 @@ async function openModal(movie) {
     img.src = src;
   }
 
-  // Reset trailer + tickets + email
+  // Reset buttons
   trailerBtn.classList.remove('visible');
   ticketsBtn.classList.remove('visible');
   emailBtn.classList.remove('visible');
-  trailerEmbed.classList.remove('visible');
-  trailerFrame.src = '';
 
   // Tickets button — theater movies only
   if (movie.where === 'theater') {
@@ -977,33 +973,22 @@ async function openModal(movie) {
   document.body.style.overflow = 'hidden';
 
   // Fetch details and trailer key in parallel
-  const [extra, trailerKey] = await Promise.all([
+  const [extra] = await Promise.all([
     getDetails(movie.id).catch(() => ({})),
-    getTrailerKey(movie.id).catch(() => null),
   ]);
 
   buildMeta(extra);
 
-  if (trailerKey) {
-    trailerBtn.classList.add('visible');
-    trailerBtn.onclick = (e) => {
-      e.preventDefault();
-      trailerEmbed.classList.toggle('visible');
-      if (trailerEmbed.classList.contains('visible')) {
-        trailerFrame.src = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
-      } else {
-        trailerFrame.src = '';
-      }
-    };
-  }
+  // Trailer — always show, links to YouTube search for official trailer
+  const ytQuery = encodeURIComponent(`${movie.title} official trailer`);
+  trailerBtn.href = `https://www.youtube.com/results?search_query=${ytQuery}`;
+  trailerBtn.removeAttribute('onclick');
+  trailerBtn.classList.add('visible');
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
-  // Stop trailer playback
-  document.getElementById('trailer-iframe').src = '';
-  document.getElementById('trailer-embed').classList.remove('visible');
 }
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e => {
