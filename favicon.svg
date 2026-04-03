@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#1e1b4b"/>
+  <!-- Slate body -->
+  <rect x="3" y="11" width="26" height="18" rx="2" fill="#ffffff"/>
+  <!-- Slate header bar -->
+  <rect x="3" y="11" width="26" height="5" rx="2" fill="#7c3aed"/>
+  <!-- Tick marks on header -->
+  <rect x="5"    y="12.5" width="2.5" height="2" rx="0.5" fill="#fbbf24"/>
+  <rect x="9.5"  y="12.5" width="2.5" height="2" rx="0.5" fill="#fbbf24"/>
+  <rect x="14"   y="12.5" width="2.5" height="2" rx="0.5" fill="#fbbf24"/>
+  <rect x="18.5" y="12.5" width="2.5" height="2" rx="0.5" fill="#fbbf24"/>
+  <rect x="23"   y="12.5" width="2.5" height="2" rx="0.5" fill="#fbbf24"/>
+  <!-- Clapperboard flaps -->
+  <polygon points="4,11 6,7 10,7 8,11"  fill="#db2777"/>
+  <polygon points="10,11 12,7 16,7 14,11" fill="#ffffff" opacity="0.9"/>
+  <polygon points="16,11 18,7 22,7 20,11" fill="#db2777"/>
+  <polygon points="22,11 24,7 28,7 26,11" fill="#ffffff" opacity="0.9"/>
+  <!-- Flap base line -->
+  <rect x="4" y="7" width="24" height="1.5" rx="0.5" fill="#1e1b4b" opacity="0.25"/>
+  <!-- Play triangle -->
+  <polygon points="13,19 13,26 20,22.5" fill="#7c3aed"/>
+</svg>
