@@ -808,11 +808,13 @@ function renderMovies() {
   const ratingOrder = ['G','PG','PG-13'];
   const maxIdx  = ratingOrder.indexOf(maxRating);
   const allowed = new Set(ratingOrder.slice(0, maxIdx + 1));
-  const ratingOk = m => !m.rating || allowed.has(m.rating);
+  const ratingOk = m => m.rating && allowed.has(m.rating);
+
+  const todayStr = today();
 
   const theater  = allMovies.filter(m => m.where === 'theater'  && ratingOk(m));
   const streaming = allMovies.filter(m => m.where === 'streaming' && ratingOk(m));
-  const coming    = allMovies.filter(m => m.where === 'coming'    && ratingOk(m));
+  const coming    = allMovies.filter(m => m.where === 'coming'    && ratingOk(m) && m.releaseDate && m.releaseDate >= todayStr);
 
   let groups;
   if (activeTab === 'all') {
@@ -850,7 +852,7 @@ function renderMovies() {
             <div class="card-info">
               <div class="movie-title">${esc(m.title)}</div>
               <div class="badges">
-                ${m.rating ? `<span class="badge ${ratingClass(m.rating)}">${m.rating}</span>` : '<span class="badge badge-nr">NR</span>'}
+                ${m.rating ? `<span class="badge ${ratingClass(m.rating)}">${m.rating}</span>` : ''}
                 ${whereBadge}
               </div>
               ${m.vote ? `<div class="movie-stars">${stars(m.vote)} <span style="font-size:11px;color:var(--text-muted);">${m.vote.toFixed(1)}</span></div>` : ''}
@@ -936,7 +938,7 @@ async function openModal(movie) {
 
   // Badges
   document.getElementById('modal-badges').innerHTML = `
-    <span class="badge ${ratingClass(movie.rating)}">${movie.rating || 'NR'}</span>
+    <span class="badge ${ratingClass(movie.rating)}">${movie.rating || ''}</span>
     ${movie.vote ? `<span class="badge" style="background:#fef3c7;color:#92400e;">★ ${movie.vote.toFixed(1)}</span>` : ''}
   `;
 
